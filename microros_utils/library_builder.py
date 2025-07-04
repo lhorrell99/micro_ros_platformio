@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, platform
 import yaml
 import shutil
 
@@ -225,13 +225,24 @@ class Build:
                 shutil.rmtree(repeated_path)
 
     def resolve_binutils_path(self):
+        homebrew_binutils_path = None
+
         if sys.platform == "darwin":
-            homebrew_binutils_path = "/opt/homebrew/opt/binutils/bin/"
+            proc = platform.processor()
+            if proc == "arm":
+                # Apple Silicon path
+                homebrew_binutils_path = "/opt/homebrew/opt/binutils/bin/"
+            elif proc == "i386":
+                # Intel Mac path
+                homebrew_binutils_path = "/usr/local/opt/binutils/bin/"
+            else:
+                print(f"ERROR: Unknown processor architecture '{proc}'.")
+                sys.exit(1)
+
             if os.path.exists(homebrew_binutils_path):
                 return homebrew_binutils_path
 
-            print("ERROR: GNU binutils not found. ({}) Please install binutils with homebrew: brew install binutils"
-                  .format(homebrew_binutils_path))
+            print(
+                f"ERROR: GNU binutils not found. Tried: {homebrew_binutils_path}. Please install binutils with homebrew: brew install binutils"
+            )
             sys.exit(1)
-
-        return ""
